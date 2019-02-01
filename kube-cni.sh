@@ -3,6 +3,8 @@
 exec 3>&1
 exec &>> /var/log/bash-cni-plugin.log
 
+IP_STORE=/tmp/reserved_ips # all reserved ips will be stored there
+
 echo "CNI command: $CNI_COMMAND" 
 
 stdin=`cat /dev/stdin`
@@ -80,19 +82,22 @@ echo "{
 ;;
 
 DEL)
-  echo "DEL not supported"
-  exit 1
+	ip=$(ip netns exec $CNI_CONTAINERID ip addr show eth0 | awk '/inet / {print $2}' | sed  s%/.*%% || echo "")
+	if [ ! -z "$ip" ]
+	then
+		sed -i "/$ip/d" $IP_STORE
+	fi
 ;;
 
 GET)
-  echo "GET not supported"
-  exit 1
+	echo "GET not supported"
+	exit 1
 ;;
 
 VERSION)
 echo '{
-  "cniVersion": "0.3.0", 
-  "supportedVersions": [ "0.2.0", "0.3.0", "0.4.0" ] 
+  "cniVersion": "0.3.1",
+  "supportedVersions": [ "0.3.0", "0.3.1", "0.4.0" ]
 }' >&3
 ;;
 
@@ -102,4 +107,3 @@ echo '{
 ;;
 
 esac
-
