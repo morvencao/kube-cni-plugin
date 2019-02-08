@@ -7,7 +7,7 @@ IP_STORE=/tmp/reserved_ips # all reserved ips will be stored there
 
 echo "CNI command: $CNI_COMMAND" 
 
-stdin=`cat /dev/stdin`
+stdin=$(cat /dev/stdin)
 echo "stdin: $stdin"
 
 allocate_ip(){
