@@ -18,3 +18,96 @@ CNI plug-in is responsible for allocating network interfaces to the newly create
 
 The idea is that kube-cni allocates a subnet for each container host and then set up some kind of routing between the hosts to forward container traffic appropriately.
 
+### Deploy
+
+1. Deploy Kubernetes cluster with [kubeadm](https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/), kubeadm is the most flexible Kubernetes installer as it allows the use of your own network plug-in.
+
+2. Config `kubectl` to connect to the newly created cluster:
+
+```
+$ mkdir -p $HOME/.kube
+$ cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+$ kubectl get nodes
+NAME         STATUS     ROLES     AGE       VERSION
+k8s-master   NotReady   master    25m       v1.11.1
+k8s-worker   NotReady             9s        v1.11.1
+```
+
+As you can see from the output, both master and worker nodes are currently in the “NotReady” state, because we haven’t configured any networking plug-in yet. If you try to deploy a pod at this time, your pod will forever hang in the “Pending” state, because the Kubernetes schedule will not be able to find any “Ready” node for it. However, kubelet runs all the system components as ordinary pods.
+
+3. Configuring the CNI plug-in
+
+   Find out what subnets are allocated from the pod network range:
+   ```
+   $ kubectl describe node k8s-master | grep PodCIDR
+   PodCIDR:                     10.200.0.0/24
+
+   $ kubectl describe node k8s-worker | grep PodCIDR
+   PodCIDR:                     10.200.1.0/24
+   ```
+
+   The whole pod network range (`10.200.0.0./16`) has been divided into small subnets, and each of the nodes received its own subnets. This means that the master node can use any of the `10.200.0.0–10.200.0.255` IPs for its containers, and the worker node uses `10.200.1.0–10.200.1.255` IPs.
+
+4. Create the CNI plugin configuration file `/etc/cni/net.d/10-bash-cni-plugin.conf` on both master and worker nodes with the following content:
+
+```
+{
+    "cniVersion": "0.3.0",
+    "name": "k8s-pod-network",
+    "type": "kube-cni",
+    "network": "10.200.0.0/16",
+    "subnet": "<node-cidr-range>"
+}
+```
+
+5. Create network bridge on both master and worker nodes:
+
+```
+$ brctl addbr cni0
+$ ip link set cni0 up
+$ ip addr add <bridge-ip>/24 dev cni0
+```
+
+Note: For this example, we reserve the `10.200.0.1` IP address for the bridge on the master node and `10.200.1.1` for the bridge on the worker node.
+
+6. Create the route that all traffic with the destination IP belonging to the pod CIDR range, local to the current node, will be redirected to the cni0 network interface:
+
+```
+$ ip route | grep cni0
+10.200.0.0/24 dev cni0  proto kernel  scope link  src 10.200.0.1
+
+$ ip route | grep cni0
+10.200.1.0/24 dev cni0  proto kernel  scope link  src 10.200.1.1
+```
+
+7. Create the CNI plugin binary in `/opt/cni/bin/` directory:
+
+```
+$ mv kube-cni.sh /opt/cni/bin/
+```
+
+8. Test the CNI plugin:
+
+   - Check status of both the master and worker nodes becomes `Ready`:
+   
+      ```
+      kubectl get node
+      NAME         STATUS     ROLES     AGE       VERSION
+      k8s-master   Ready   master    25m       v1.11.1
+      k8s-worker   Ready             9s        v1.11.1
+      ```
+   - Untaint the master node so that pods can be deployed on master node:
+
+     ```
+     $ kubectl taint nodes k8s-master node-role.kubernetes.io/master-node/k8s-master untainted
+     ```
+
+   - Deploy the sample nginx applications:
+
+     ```
+     $ kubectl apply -f nginx-deployment.yaml
+     $ kubectl describe pod | grep IP
+     IP:                 10.200.0.2
+     IP:                 10.200.1.2
+     ```
+
