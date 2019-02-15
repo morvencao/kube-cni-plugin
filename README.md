@@ -106,8 +106,14 @@ $ mv kube-cni.sh /opt/cni/bin/
 
      ```
      $ kubectl apply -f nginx-deployment.yaml
-     $ kubectl describe pod | grep IP
-     IP:                 10.200.0.2
-     IP:                 10.200.1.2
      ```
 
+### Verfify
+
+1. Check the newly create pod get IP address:
+
+```
+$ kubectl describe pod | grep IP
+IP:                 10.200.0.2
+IP:                 10.200.1.2
+```
