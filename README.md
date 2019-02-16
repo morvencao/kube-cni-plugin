@@ -114,6 +114,6 @@ $ mv kube-cni.sh /opt/cni/bin/
 
 ```
 $ kubectl describe pod | grep IP
-IP:                 10.200.0.2
-IP:                 10.200.1.2
+IP:                 10.200.0.3
+IP:                 10.200.1.3
 ```
