@@ -10,7 +10,7 @@ echo "CNI command: $CNI_COMMAND"
 stdin=$(cat /dev/stdin)
 echo "stdin: $stdin"
 
-allocate_ip(){
+function allocate_ip(){
 	for ip in "${all_ips[@]}"
 	do
 		reserved=false
@@ -31,7 +31,7 @@ allocate_ip(){
 
 case $CNI_COMMAND in
 ADD)
-  network=$(echo "$stdin" | jq -r ".network")
+	network=$(echo "$stdin" | jq -r ".network")
 	subnet=$(echo "$stdin" | jq -r ".subnet")
 	subnet_mask_size=$(echo $subnet | awk -F  "/" '{print $2}')
 
@@ -39,7 +39,7 @@ ADD)
 	all_ips=(${all_ips[@]})
 	skip_ip=${all_ips[0]}
 	gw_ip=${all_ips[1]}
-	reserved_ips=$(cat $IP_STORE 2> /dev/null || printf "$skip_ip\n$gw_ip\n") # reserving 10.244.0.0 and 10.244.0.1
+	reserved_ips=$(cat $IP_STORE 2> /dev/null || printf "$skip_ip\n$gw_ip\n") # reserving 10.200.0.0 and 10.200.0.1
 	reserved_ips=(${reserved_ips[@]})
 	printf '%s\n' "${reserved_ips[@]}" > $IP_STORE
 	container_ip=$(allocate_ip)
