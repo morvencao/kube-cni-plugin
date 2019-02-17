@@ -42,7 +42,7 @@ ADD)
 	reserved_ips=$(cat $IP_STORE 2> /dev/null || printf "$skip_ip\n$gw_ip\n") # reserving 10.200.0.0 and 10.200.0.1
 	reserved_ips=(${reserved_ips[@]})
 	printf '%s\n' "${reserved_ips[@]}" > $IP_STORE
-	container_ip=$(allocate_ip)
+	pod_ip=$(allocate_ip)
 
 	mkdir -p /var/run/netns/
 	ln -sfT $CNI_NETNS /var/run/netns/$CNI_CONTAINERID
@@ -56,7 +56,7 @@ ADD)
 
 	ip link set $CNI_IFNAME netns $CNI_CONTAINERID
 	ip netns exec $CNI_CONTAINERID ip link set $CNI_IFNAME up
-	ip netns exec $CNI_CONTAINERID ip addr add $container_ip/$subnet_mask_size dev $CNI_IFNAME
+	ip netns exec $CNI_CONTAINERID ip addr add $pod_ip/$subnet_mask_size dev $CNI_IFNAME
 	ip netns exec $CNI_CONTAINERID ip route add default via $gw_ip dev $CNI_IFNAME
 
 	mac=$(ip netns exec $CNI_CONTAINERID ip link show eth0 | awk '/ether/ {print $2}')
@@ -72,7 +72,7 @@ echo "{
   \"ips\": [
       {
           \"version\": \"4\",
-          \"address\": \"$container_ip/$subnet_mask_size\",
+          \"address\": \"$pod_ip/$subnet_mask_size\",
           \"gateway\": \"$gw_ip\",
           \"interface\": 0 
       }
