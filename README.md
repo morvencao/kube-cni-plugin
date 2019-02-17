@@ -48,7 +48,7 @@ As you can see from the output, both master and worker nodes are currently in th
 
    The whole pod network range (`10.200.0.0./16`) has been divided into small subnets, and each of the nodes received its own subnets. This means that the master node can use any of the `10.200.0.0–10.200.0.255` IPs for its containers, and the worker node uses `10.200.1.0–10.200.1.255` IPs.
 
-4. Create the CNI plugin configuration file `/etc/cni/net.d/10-bash-cni-plugin.conf` on both master and worker nodes with the following content:
+4. Create the CNI plugin configuration file `/etc/cni/net.d/10-kube-cni-plugin.conf` on both master and worker nodes with the following content:
 
 ```
 {

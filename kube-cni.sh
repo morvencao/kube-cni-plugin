@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 exec 3>&1
-exec &>> /var/log/bash-cni-plugin.log
+exec &>> /var/log/kube-cni-plugin.log
 
 IP_STORE=/tmp/reserved_ips # all reserved ips will be stored there
 
