@@ -39,13 +39,13 @@ ADD)
 	all_ips=(${all_ips[@]})
 	skip_ip=${all_ips[0]}
 	gw_ip=${all_ips[1]}
-	reserved_ips=$(cat $IP_STORE 2> /dev/null || printf "$skip_ip\n$gw_ip\n") # reserving 10.200.0.0 and 10.200.0.1
+	reserved_ips=$(cat $IP_STORE 2> /dev/null || printf "$skip_ip\n$gw_ip\n") # reserving 10.0.0.0 and 10.0.0.1
 	reserved_ips=(${reserved_ips[@]})
 	printf '%s\n' "${reserved_ips[@]}" > $IP_STORE
 	pod_ip=$(allocate_ip)
 
 	mkdir -p /var/run/netns/
-	ln -sfT $CNI_NETNS /var/run/netns/$CNI_CONTAINERID
+	ln -sfT $CNI_NETNS /var//netns/$CNI_CONTAINERID
 
 	rand=$(tr -dc 'A-F0-9' < /dev/urandom | head -c4)
 	host_if_name="veth$rand"

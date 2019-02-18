@@ -40,13 +40,13 @@ As you can see from the output, both master and worker nodes are currently in th
    Find out what subnets are allocated from the pod network range:
    ```
    $ kubectl describe node k8s-master | grep PodCIDR
-   PodCIDR:                     10.200.0.0/24
+   PodCIDR:                     10.0.0.0/24
 
    $ kubectl describe node k8s-worker | grep PodCIDR
-   PodCIDR:                     10.200.1.0/24
+   PodCIDR:                     10.0.1.0/24
    ```
 
-   The whole pod network range (`10.200.0.0./16`) has been divided into small subnets, and each of the nodes received its own subnets. This means that the master node can use any of the `10.200.0.0–10.200.0.255` IPs for its containers, and the worker node uses `10.200.1.0–10.200.1.255` IPs.
+   The whole pod network range (`10.0.0.0./16`) has been divided into small subnets, and each of the nodes received its own subnets. This means that the master node can use any of the `10.0.0.0–10.0.0.255` IPs for its containers, and the worker node uses `10.0.1.0–10.0.1.255` IPs.
 
 4. Create the CNI plugin configuration file `/etc/cni/net.d/10-kube-cni-plugin.conf` on both master and worker nodes with the following content:
 
@@ -55,7 +55,7 @@ As you can see from the output, both master and worker nodes are currently in th
     "cniVersion": "0.3.0",
     "name": "k8s-pod-network",
     "type": "kube-cni",
-    "network": "10.200.0.0/16",
+    "network": "10.0.0.0/16",
     "subnet": "<node-cidr-range>"
 }
 ```
@@ -68,16 +68,16 @@ $ ip link set cni0 up
 $ ip addr add <bridge-ip>/24 dev cni0
 ```
 
-Note: For this example, we reserve the `10.200.0.1` IP address for the bridge on the master node and `10.200.1.1` for the bridge on the worker node.
+Note: For this example, we reserve the `10.0.0.1` IP address for the bridge on the master node and `10.0.1.1` for the bridge on the worker node.
 
 6. Create the route that all traffic with the destination IP belonging to the pod CIDR range, local to the current node, will be redirected to the cni0 network interface:
 
 ```
 $ ip route | grep cni0
-10.200.0.0/24 dev cni0  proto kernel  scope link  src 10.200.0.1
+10.0.0.0/24 dev cni0  proto kernel  scope link  src 10.0.0.1
 
 $ ip route | grep cni0
-10.200.1.0/24 dev cni0  proto kernel  scope link  src 10.200.1.1
+10.0.1.0/24 dev cni0  proto kernel  scope link  src 10.0.1.1
 ```
 
 7. Create the CNI plugin binary in `/opt/cni/bin/` directory:
@@ -114,6 +114,6 @@ $ mv kube-cni.sh /opt/cni/bin/
 
 ```
 $ kubectl describe pod | grep IP
-IP:                 10.200.0.3
-IP:                 10.200.1.3
+IP:                 10.0.0.3
+IP:                 10.0.1.3
 ```
