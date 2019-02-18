@@ -23,3 +23,29 @@ spec:
     - containerPort: 80
   nodeSelector:
     kubernetes.io/hostname: k8s-worker
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sleep-master
+spec:
+  containers:
+  - name: sleep
+    image: pstauffer/curl
+    command: ["/bin/sleep", "3650d"]
+    imagePullPolicy: IfNotPresent
+  nodeSelector:
+    kubernetes.io/hostname: k8s-master
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sleep-worker
+spec:
+  containers:
+  - name: sleep
+    image: pstauffer/curl
+    command: ["/bin/sleep", "3650d"]
+    imagePullPolicy: IfNotPresent
+  nodeSelector:
+    kubernetes.io/hostname: k8s-worker
