@@ -48,7 +48,7 @@ As you can see from the output, both master and worker nodes are currently in th
 
    The whole pod network range (`10.0.0.0./16`) has been divided into small subnets, and each of the nodes received its own subnets. This means that the master node can use any of the `10.0.0.0–10.0.0.255` IPs for its containers, and the worker node uses `10.0.1.0–10.0.1.255` IPs.
 
-4. Create the CNI plugin configuration file `/etc/cni/net.d/10-kube-cni-plugin.conf` on both master and worker nodes with the following content:
+4. Create the CNI plugin configuration file `/etc/cni/net.d/100-kube-cni-plugin.conf` on both master and worker nodes with the following content:
 
 ```
 {
@@ -56,9 +56,11 @@ As you can see from the output, both master and worker nodes are currently in th
     "name": "k8s-pod-network",
     "type": "kube-cni",
     "network": "10.0.0.0/16",
-    "subnet": "<node-cidr-range>"
+    "subnet": "${NODECIDRRANGE}"
 }
 ```
+
+> Note: Replace `${NODECIDRRANGE}` with the output value of step 3.
 
 5. Create network bridge on both master and worker nodes:
 
@@ -74,7 +76,7 @@ Note: For this example, we reserve the `10.0.0.1` IP address for the bridge on t
 
 ```
 $ ip route | grep cni0
-10.0.0.0/24 dev cni0  proto kernel  scope link  src 10.0.0.1
+10.0.0.0/24 dev cni0  proto kernel  scope link  src cf0.0.0.1
 
 $ ip route | grep cni0
 10.0.1.0/24 dev cni0  proto kernel  scope link  src 10.0.1.1
