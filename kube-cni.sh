@@ -78,7 +78,6 @@ echo "{
       }
   ]
 }" >&3
-
 ;;
 
 DEL)
@@ -102,7 +101,7 @@ echo '{
 ;;
 
 *)
-  echo "Unknown cni commandn: $CNI_COMMAND" 
+  echo "Unknown CNI command: $CNI_COMMAND"
   exit 1
 ;;
 
